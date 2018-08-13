@@ -3,6 +3,7 @@ import cv2
 import os
 from utils import linear_mapping, pre_process, random_warp
 
+import datetime
 """
 This module implements the basic correlation filter based tracking algorithm -- MOSSE
 
@@ -48,6 +49,7 @@ class mosse:
                 pos = init_gt.copy()
                 clip_pos = np.array([pos[0], pos[1], pos[0]+pos[2], pos[1]+pos[3]]).astype(np.int64)
             else:
+                time1=datetime.datetime.now()
                 Hi = Ai / Bi
                 fi = frame_gray[clip_pos[1]:clip_pos[3], clip_pos[0]:clip_pos[2]]
                 fi = pre_process(cv2.resize(fi, (init_gt[2], init_gt[3])))
@@ -76,11 +78,11 @@ class mosse:
                 # online update...
                 Ai = self.args.lr * (G * np.conjugate(np.fft.fft2(fi))) + (1 - self.args.lr) * Ai
                 Bi = self.args.lr * (np.fft.fft2(fi) * np.conjugate(np.fft.fft2(fi))) + (1 - self.args.lr) * Bi
-            
+                print("time",(datetime.datetime.now()-time1).microseconds,current_frame.shape)
             # visualize the tracking process...
             cv2.rectangle(current_frame, (pos[0], pos[1]), (pos[0]+pos[2], pos[1]+pos[3]), (255, 0, 0), 2)
             cv2.imshow('demo', current_frame)
-            cv2.waitKey(100)
+            cv2.waitKey(1)
             # if record... save the frames..
             if self.args.record:
                 frame_path = 'record_frames/' + self.img_path.split('/')[1] + '/'
